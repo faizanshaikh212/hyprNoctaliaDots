@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+STATE_FILE="$HOME/.cache/cursor_anim_state"
+CURRENT_STATE=$(cat "$STATE_FILE" 2>/dev/null || echo "true")
+
+# 1. Map the state to Rofi menu text
+if [ "$CURRENT_STATE" = "true" ]; then
+  menu_text="Disable Cursor Anims"
+else
+  menu_text="Enable Cursor Anims"
+fi
+
+# 2. Present the option to the user
+chosen=$(echo -e "$menu_text" | rofi -dmenu -p "Quick Menu:")
+
+# 3. Call the external toggle script if chosen
+if [ "$chosen" = "$menu_text" ]; then
+  "$HOME/.config/hypr/scripts/disable_cursor_anims"
+fi

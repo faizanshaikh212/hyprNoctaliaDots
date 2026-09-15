@@ -1,0 +1,30 @@
+[[mgr.prepend_keymap]]
+on   = "l"
+run  = "plugin smart-enter"
+desc = "Enter the child directory, or open the file"
+
+[[mgr.prepend_keymap]]
+on = ["<Enter>"]
+run = "plugin smart-enter"
+desc = "Enter the child directory, or open the selected file"
+
+[[mgr.prepend_keymap]]
+on = ["<Backspace>"]
+run = "leave"
+desc = "Go back to the parent directory"
+
+prepend_keymap = [
+    # glow.yazi  ctrl+e , ctrl+y
+    { on = ["<C-e>"], run = "seek 5" },
+    { on = ["<C-y>"], run = "seek -5" },
+]
+
+[[mgr.prepend_keymap]]
+on   = "T"
+run  = "plugin --sync max-preview"
+desc = "Maximize or restore preview"
+
+[[mgr.prepend_keymap]]
+on   = [ "M" ]
+run  = "plugin mount"
+desc = "Open Mounted Devices and Partitions Selection Menu"

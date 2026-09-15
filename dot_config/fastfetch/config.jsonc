@@ -1,0 +1,106 @@
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "source": "arch_small",
+    "padding": {
+      "top": 4
+    },
+    "color": {
+      "1": "#63bbe4",
+      "2": "#5c73d6"
+    }
+  },
+  "display": {
+    "separator": " ›  ",
+    "color": {
+      "keys": "#67bbe4",
+      "title": "#5c73d6"
+    },
+    "percent": {
+      "color": {
+        "green": "#8866cc",
+        "yellow": "#93cfec",
+        "red": "#fd4663"
+      }
+    }
+  },
+  "modules": [
+    "break",
+    {
+      "type": "os",
+      "key": "os  ",
+      "keyColor": "yellow",
+      "format": "{name}"
+    },
+    {
+      "type": "kernel",
+      "key": "ker ",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "host",
+      "key": "host",
+      "keyColor": "yellow"
+    },
+    {
+      "type": "wm",
+      "key": "wm  ",
+      "keyColor": "yellow",
+      "format": "{pretty-name}"
+    },
+    {
+      "type": "uptime",
+      "key": "up  ",
+      "keyColor": "blue"
+    },
+    {
+      "type": "packages",
+      "key": "pkg ",
+      "keyColor": "blue"
+    },
+    {
+      "type": "terminal",
+      "key": "ter ",
+      "keyColor": "blue",
+      "format": "{pretty-name}"
+    },
+    {
+      "type": "shell",
+      "key": "sh  ",
+      "keyColor": "blue",
+      "format": "{pretty-name}"
+    },
+    {
+      "type": "cpu",
+      "key": "cpu ",
+      "keyColor": "cyan",
+      "format": "{name}"
+    },
+    {
+      "type": "gpu",
+      "key": "gpu ",
+      "keyColor": "cyan",
+      "format": "{name}"
+    },
+    {
+      "type": "memory",
+      "key": "ram ",
+      "keyColor": "cyan",
+      "format": "{used} / {total}"
+    },
+    {
+      "type": "disk",
+      "key": "disk",
+      "keyColor": "cyan",
+      "folders": [
+        "/"
+      ],
+      "format": "{size-used} / {size-total}"
+    },
+    "break",
+    {
+      "type": "custom",
+      "format": "\u001b[31m󰮯 \u001b[32m󰊠 \u001b[33m󰊠 \u001b[34m󰊠 \u001b[35m󰊠 \u001b[36m󰊠 \u001b[37m󰊠 \u001b[30m󰊠 "
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+    // Fixes the Text Editor canvas
+    "editor.fontFamily": "JetBrainsMono Nerd Font, Font Awesome 6 Free, Font Awesome 6 Brands, monospace",
+    "editor.fontLigatures": true,
+
+    // Fixes the Integrated Terminal canvas on Wayland
+    "terminal.integrated.fontFamily": "'JetBrainsMonoNF', 'Font Awesome 6 Free'",
+    
+    // Prevents Hyprland/Electron composition clipping blocks
+    "terminal.integrated.gpuAcceleration": "canvas",
+    "terminal.integrated.minimumContrastRatio": 1,
+    "editor.fontSize": 16,
+    "liveServer.settings.donotShowInfoMsg": true
+}

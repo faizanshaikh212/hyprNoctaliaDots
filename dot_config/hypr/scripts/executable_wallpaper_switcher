@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+
+WALL_DIR="$HOME/Pictures/Wallpapers"
+THEME="$HOME/.config/rofi/themes/wallpaper_switcher.rasi"
+THUMB_DIR="${WALL_DIR}/.thumbnails"
+
+mkdir -p "$THUMB_DIR"
+cd "$WALL_DIR" || exit 1
+
+# Fix me confusion
+if pgrep -x "awww-daemon" >/dev/null; then
+  CMD="awww"
+else
+  CMD="swww"
+fi
+
+# Read active wallpaper
+if [ "$CMD" = "awww" ]; then
+  CURRENT_WALL=$(awww query | grep -oP 'image: \K.*')
+else
+  CURRENT_WALL=$(swww query | awk -F': ' '{print $2}' | head -n 1)
+fi
+CURRENT_FILE=$(basename "$CURRENT_WALL" | tr -d '"'\'' ')
+
+# Create cache matrix and track current row
+ROW_INDEX=0
+CURRENT_ROW=0
+WALL_LIST=""
+
+while read -r file; do
+  [ -z "$file" ] && continue
+  label=$(basename "$file")
+
+  if [ "${label}" = "${CURRENT_FILE}" ]; then
+    CURRENT_ROW=$ROW_INDEX
+  fi
+
+  # If thumbnail doesn't exist, generate a tiny 180px cache image instantly
+  if [ ! -f "${THUMB_DIR}/${label}" ]; then
+    ffmpegthumbnailer -i "${file}" -o "${THUMB_DIR}/${label}" -s 180 &>/dev/null &
+    # Fallback to original image temporarily while the background thread bakes the thumbnail
+    THUMB_PATH="${WALL_DIR}/${label}"
+  else
+    THUMB_PATH="${THUMB_DIR}/${label}"
+  fi
+
+  # Let rofi use thumbnail cache instead of actual image
+  WALL_LIST+="${label}\0icon\x1f${THUMB_PATH}\n"
+  ((ROW_INDEX++))
+done < <(find . -maxdepth 1 -type f \( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" \) -printf "%P\n" | sort)
+
+# Wait for any background thumbnail generation threads to finish up cleanly
+wait
+
+# Open Rofi pre-focused on active row number
+
+SELECTED_WALL=$(echo -en "$WALL_LIST" | rofi -dmenu -i -sort false -show-icons -selected-row "$CURRENT_ROW" -theme "$THEME" -p "  ")
+
+[ -z "$SELECTED_WALL" ] && exit 0
+
+FULL_WALL_PATH="$WALL_DIR/$SELECTED_WALL"
+THUMB_PATH="${THUMB_DIR}/$SELECTED_WALL"
+
+# 1. Run update_theme script asynchronously to change colors instantly
+~/.config/hypr/scripts/update_theme "$FULL_WALL_PATH" &
+
+sleep 1
+
+# 2. Extract 8 prominent hex colors from the thumbnail for the fastfetch dot array
+if command -v magick &>/dev/null; then
+  hex_colors=$(magick "$THUMB_PATH" -colors 8 -unique-colors txt: | grep -oP '#[0-9A-Fa-f]{6}')
+
+  COLOR_STRIP=""
+  for hex in $hex_colors; do
+    COLOR_STRIP+="<span foreground='$hex'>● </span>"
+  done
+else
+  COLOR_STRIP="● ● ● ● ● ● ● ●"
+fi
+
+# 3. Dispatch the text-only fastfetch style desktop notification
+if command -v swaync-client &>/dev/null; then
+  # Clear old notification stacks
+  swaync-client -C &>/dev/null
+
+  # Removed the -i parameter entirely to keep it clean, compact, and text-only
+  notify-send -e \
+    -a "Wallpaper Switcher" \
+    -u "normal" \
+    -t 6000 \
+    "Wallpaper Updated" \
+    "Wallpaper: <b>$SELECTED_WALL</b>\nColors: $COLOR_STRIP"
+fi
+
+exit 0

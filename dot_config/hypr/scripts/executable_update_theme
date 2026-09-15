@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+
+# Get the directory where this Bash script lives
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+
+WALLPAPER="$1"
+if [ -z "$WALLPAPER" ]; then
+  echo "Error: No wallpaper path provided."
+  exit 1
+fi
+
+transition_angle=("0" "90" "180" "270")
+transition_list=("grow" "wipe" "outer" "center")
+
+CHOSEN_ANGLE=${transition_angle[$RANDOM % ${#transition_angle[@]}]}
+CHOSEN_TYPE=${transition_list[$RANDOM % ${#transition_list[@]}]}
+
+# Extracted color metrics via Python
+IS_GRAYSCALE=false
+WALL_HEX=""
+LIGHT_OR_DARK="light"
+
+if command -v python3 &>/dev/null; then
+  export DETECT_WALLPAPER="$WALLPAPER"
+
+  # Call the update_theme-accents python3 file
+  read -r IS_GRAYSCALE WALL_HEX LIGHT_OR_DARK < <(python3 "$SCRIPT_DIR/update_theme-accents" 2>/dev/null)
+fi
+
+# Compile matugen templates
+if [ "$IS_GRAYSCALE" = "true" ]; then
+  matugen -c "$HOME/.config/matugen/config.toml" image "$WALLPAPER" --type scheme-monochrome --mode dark --source-color-index 0
+else
+  matugen -c "$HOME/.config/matugen/config.toml" image "$WALLPAPER" --mode dark --source-color-index 0
+fi
+
+# Dynamically apply matching cursor accent
+if [ "$IS_GRAYSCALE" = "true" ]; then
+  THEME_NAME="catppuccin-mocha-${LIGHT_OR_DARK}-cursors"
+else
+  THEME_NAME="catppuccin-mocha-${WALL_HEX}-cursors"
+fi
+
+# Write status execution metrics securely to tracking log
+echo "Wallpaper: $WALLPAPER | Mode: Grayscale=$IS_GRAYSCALE Brightness_Fallback=$LIGHT_OR_DARK | Applied Theme: $THEME_NAME" >/tmp/cursor_match.log
+
+# Apply and persist theme across system configuration files
+if [ -n "$THEME_NAME" ]; then
+  # Dynamic environmental variables
+  hyprctl setenv XCURSOR_THEME "$THEME_NAME"
+  hyprctl setenv HYPRCURSOR_THEME "$THEME_NAME"
+
+  # Live compositor update
+  hyprctl setcursor "$THEME_NAME" 24
+
+  # Sync active GTK desktop environment runtimes
+  if command -v gsettings &>/dev/null; then
+    gsettings set org.gnome.desktop.interface cursor-theme "$THEME_NAME"
+  fi
+
+  # Modern XDG baseline directory pointer configuration update
+  mkdir -p "$HOME/.local/share/icons/default"
+  echo -e "[Icon Theme]\nInherits=${THEME_NAME}" >"$HOME/.local/share/icons/default/index.theme"
+
+  # Sync user local fallback settings files
+  mkdir -p "$HOME/.config/gtk-3.0"
+  touch "$HOME/.config/gtk-3.0/settings.ini"
+  sed -i "s/^gtk-cursor-theme-name=.*/gtk-cursor-theme-name=${THEME_NAME}/" "$HOME/.config/gtk-3.0/settings.ini" 2>/dev/null
+fi
+
+# Trigger SwayNC Reload
+if command -v swaync-client &>/dev/null; then
+  swaync-client -rs &>/dev/null &
+fi
+
+# Reload Kitty
+# pkill -USR1 -x kitty
+if pgrep -x "kitty" >/dev/null; then
+  kill -SIGUSR1 $(pgrep -x kitty)
+fi
+
+# Signal Waybar Reload
+# if pgrep -x "waybar" >/dev/null; then
+#  kill -SIGUSR2 $(pgrep -x waybar)
+#fi
+
+# Relaunch waybar completely to fix gtk context menu not updating, when theme is changed.
+pkill -x waybar
+while pgrep -x waybar >/dev/null; do sleep 0.1; done
+
+# Relaunch waybar completely detached from your script
+waybar >/dev/null 2>&1 &
+disown
+
+# Update the wallpaper
+if pgrep -x "awww-daemon" >/dev/null; then
+  awww img "$WALLPAPER" --transition-type "$CHOSEN_TYPE" --transition-duration 3.0 --transition-fps 60 --transition-step 90 --transition-angle "$CHOSEN_ANGLE"
+fi
+
+exit 0

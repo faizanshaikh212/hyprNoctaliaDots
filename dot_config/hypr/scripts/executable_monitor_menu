@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+
+chosen=$(echo -e "Extend to Right\nExtend to Left\nMirror\nPrimary Only\nSecondary Only\nLaptop 60hz Only" | rofi -dmenu -p "Display Settings:")
+
+# Close rofi if no selection
+if [ -z "$chosen" ]; then
+  exit 0
+fi
+
+# Function to restart waybar
+# waybar_reset() {
+#  sleep 0.3
+#  killall -q waybar
+#  waybar &
+#}
+
+# Selection menu
+case "$chosen" in
+"Extend to Right")
+  # Extend Laptop Monitor with HDMI-A-1 on the right side
+  hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "1920x1080@144", position = "0x360", scale = "1", disabled = false })'
+  hyprctl eval 'hl.monitor({ output = "HDMI-A-1", mode = "2560x1440@144", position = "1920x0", scale = "1", disabled = false })'
+  ;;
+
+"Extend to Left")
+  # Extend Laptop Monitor with HDMI-A-1 on the left side
+  hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "1920x1080@144", position = "2560x360", scale = "1", disabled = false })'
+  hyprctl eval 'hl.monitor({ output = "HDMI-A-1", mode = "2560x1440@144", position = "0x0", scale = "1", disabled = false })'
+  ;;
+
+"Mirror")
+  # Mirror Monitor outputs
+  hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "1920x1080@144", position = "0x0", scale = "1", disabled = false })'
+  hyprctl eval 'hl.monitor({ output = "HDMI-A-1", mode = "preferred", position = "auto", scale = "auto", mirror = "eDP-1", disabled = false })'
+  ;;
+
+"Primary Only")
+  # Laptop Monitor only
+  hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "1920x1080@144", position = "0x0", scale = "1", disabled = false})'
+  sleep 0.2
+  hyprctl eval 'hl.monitor({ output = "HDMI-A-1", disabled = true})'
+  ;;
+
+"Secondary Only")
+  # External Monitor only
+  hyprctl eval 'hl.monitor({ output = "eDP-1", disabled = true})'
+  sleep 0.2
+  hyprctl eval 'hl.monitor({ output = "HDMI-A-1", mode = "2560x1440@144", position = "0x0", scale = "1", disabled = false})'
+  ;;
+
+"Laptop 60hz Only")
+  # Laptop Monitor only at 60hz for more battery life
+  hyprctl eval 'hl.monitor({ output = "eDP-1", mode = "1920x1080@60", position = "0x0", scale = "1", disabled = false})'
+  sleep 0.2
+  hyprctl eval 'hl.monitor({ output = "HDMI-A-1", disabled = true})'
+  ;;
+
+*)
+
+  exit 0
+  ;;
+
+esac

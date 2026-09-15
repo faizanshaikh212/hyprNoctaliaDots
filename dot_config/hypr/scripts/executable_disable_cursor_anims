@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+STATE_FILE="$HOME/.cache/cursor_anim_state"
+
+# Handle system startup argument to force sync
+if [ "$1" = "startup" ]; then
+  echo "true" >"$STATE_FILE"
+  hyprctl eval "hl.config({ plugin = { dynamic_cursors = { enabled = true } } })"
+  exit 0
+fi
+
+# Read current state, default to true if file does not exist
+if [ -f "$STATE_FILE" ]; then
+  CURRENT_STATE=$(cat "$STATE_FILE")
+else
+  CURRENT_STATE="true"
+fi
+
+# Determine next state
+if [ "$CURRENT_STATE" = "true" ]; then
+  NEXT_STATE="false"
+else
+  NEXT_STATE="true"
+fi
+
+# Apply the change to Hyprland and save the new state
+hyprctl eval "hl.config({ plugin = { dynamic_cursors = { enabled = $NEXT_STATE } } })"
+echo "$NEXT_STATE" >"$STATE_FILE"

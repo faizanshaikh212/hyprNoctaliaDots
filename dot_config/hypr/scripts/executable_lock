@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Play the video in a loop as an overlay on all monitors (*)
+mpvpaper -l overlay -vs -o "no-audio loop" '*' ~/.config/hypr/scripts/assets/bg_lockscreen.mp4 -f &
+
+# Wait briefly for the video to start
+sleep 1
+
+# Launch Hyprlock
+hyprlock
+
+# Once unlocked and Hyprlock exits, kill mpvpaper
+pkill mpvpaper

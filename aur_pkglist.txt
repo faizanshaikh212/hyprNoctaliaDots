@@ -1,0 +1,5 @@
+hyprland-preview-share-picker-git
+legacy-launcher
+nbtexplorer-bin
+noctalia-git
+rustdesk

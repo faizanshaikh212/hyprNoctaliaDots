@@ -1,0 +1,83 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+import math
+from PIL import Image
+
+try:
+    # Read the environment variable passed from Bash
+    img_path = os.environ.get('DETECT_WALLPAPER')
+    if not img_path:
+        print('false mauve light')
+        sys.exit(0)
+
+    img = Image.open(img_path).convert('RGB')
+
+    # 1. Grayscale Variance Detection
+    small_img = img.resize((50, 50))
+    pixels = list(small_img.getdata())
+    r, g, b = zip(*pixels)
+    variance = sum(abs(r[i]-g[i]) + abs(g[i]-b[i]) + abs(b[i]-r[i]) for i in range(len(pixels))) / len(pixels)
+    is_gray = 'true' if variance < 15.0 else 'false'
+
+    # Calculate overall brightness to determine cursor contrast
+    avg_brightness = sum((r[i] + g[i] + b[i]) / 3 for i in range(len(pixels))) / len(pixels)
+
+    # Contrast logic: Bright wallpaper -> dark cursor. Dark wallpaper -> light cursor.
+    bg_mode = 'dark' if avg_brightness > 127.5 else 'light'
+
+    # 2. Extract dominant color cluster
+    dom_img = img.resize((100, 100)).convert('P', palette=Image.Palette.ADAPTIVE, colors=5)
+    palette = dom_img.getpalette()
+    color_counts = dom_img.getcolors(maxcolors=10000)
+
+    if color_counts:
+        most_frequent = max(color_counts, key=lambda x: x[0])
+        idx = most_frequent[1]
+        tr = palette[idx * 3]
+        tg = palette[idx * 3 + 1]
+        tb = palette[idx * 3 + 2]
+
+        # 3. High-Accuracy Perceptual Hybrid Matching Engine
+        ACCENTS = {
+            'rosewater': (245, 224, 220), 'flamingo': (242, 205, 205), 'pink': (245, 194, 231),
+            'mauve': (203, 166, 247), 'red': (243, 139, 168), 'maroon': (235, 160, 172),
+            'peach': (250, 179, 135), 'yellow': (249, 226, 175), 'green': (166, 227, 161),
+            'teal': (148, 226, 213), 'sky': (137, 220, 235), 'sapphire': (116, 199, 236),
+            'blue': (137, 180, 250), 'lavender': (180, 190, 254)
+        }
+ 
+        mag_t = math.sqrt(tr**2 + tg**2 + tb**2) or 1
+        best_accent = 'mauve'
+        min_score = float('inf')
+
+        for name, (ar, ag, ab) in ACCENTS.items():
+            # Factor A: Vector Angle Direction
+            mag_a = math.sqrt(ar**2 + ag**2 + ab**2)
+            dr = (tr / mag_t) - (ar / mag_a)
+            dg = (tg / mag_t) - (ag / mag_a)
+            db = (tb / mag_t) - (ab / mag_a)
+            angle_dist = dr*dr + dg*dg + db*db
+
+            # Factor B: Human-eye perceived absolute color distance
+            diff_r = tr - ar
+            diff_g = tg - ag
+            diff_b = tb - ab
+            perceptual_dist = math.sqrt((2 * diff_r**2) + (4 * diff_g**2) + (3 * diff_b**2))
+
+            # Combine both metrics
+            total_score = angle_dist * (perceptual_dist + 1)
+
+            if total_score < min_score:
+                min_score = total_score
+                best_accent = name
+
+        print(f'{is_gray} {best_accent} {bg_mode}')
+    else:
+        print(f'{is_gray} mauve {bg_mode}')
+except Exception as e:
+    with open('/tmp/cursor_match.log', 'w') as f:
+        f.write(f'Python Error: {str(e)}\n')
+    print('false mauve light')
+

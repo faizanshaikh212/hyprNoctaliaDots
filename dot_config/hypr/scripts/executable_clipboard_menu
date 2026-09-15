@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+# File paths
+THEME_FILE="~/.config/rofi/themes/clipboard_menu.rasi"
+
+# Custom action buttons
+KEY_COPY="Alt+c"
+KEY_DELETE="Alt+d"
+while true; do
+  selection=$(
+    cliphist list | rofi \
+      -dmenu \
+      -mesg " 󰌑 Paste | [$KEY_COPY]-Copy | [$KEY_DELETE]-Delete" \
+      -theme "$THEME_FILE" \
+      -kb-custom-1 "$KEY_COPY" \
+      -kb-custom-2 "$KEY_DELETE"
+  )
+
+  status=$?
+
+  # Exit conditions (Escape pressed or empty selection)
+  if [ "$status" -eq 1 ] || [ "$status" -gt 12 ] || { [ -z "$selection" ] && [ "$status" -ne 12 ]; }; then
+    exit 0
+  fi
+
+  case "$status" in
+  0) # [Enter] Key / Double Click: Terminal-Friendly Paste
+    # Close Rofi instantly
+    pkill -x rofi
+
+    # Decode text snippet to clipboard selection buffers
+    echo "$selection" | cliphist decode | wl-copy
+
+    # Brief pause to let physical inputs clear
+    sleep 0.15
+
+    # Inject CTRL+SHIFT+V (Triggers terminal paste natively)
+    if command -v wtype &>/dev/null; then
+      wtype -M ctrl -M shift v -m ctrl -m shift
+    else
+      hyprctl dispatch sendshortcut "CTRL_SHIFT, v, activewindow"
+    fi
+    exit 0
+    ;;
+
+  10) # [Alt + c] Key: Instantly copy and close window
+    echo "$selection" | cliphist decode | wl-copy
+    exit 0
+    ;;
+
+  11) # [Alt + d] Key: Delete history item from database and keep menu open
+    echo "$selection" | cliphist delete
+    ;;
+  esac
+done

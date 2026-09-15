@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+# Define the temporary image name
+IMG_NAME="swash-$(date +%Y-%m-%d_%H-%M-%S).png"
+
+# Capture the image using swash and pipe a duplicate to zbarimg
+QR=$(swash --stdin --name "$IMG_NAME" | tee >(cat) | zbarimg -q --raw - 2>/dev/null)
+
+# Check if a QR code was successfully decoded
+if [ -n "$QR" ]; then
+    # Copy to clipboard
+    echo -n "$QR" | wl-copy
+    
+    # Send a desktop notification
+    notify-send 'QR Code Found!' 'Copied and opening link...' -i link
+    
+    # Open the URL using available system handlers
+    gio open "$QR" 2>/dev/null || xdg-open "$QR" 2>/dev/null
+fi

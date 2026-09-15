@@ -1,0 +1,122 @@
+# ~/.config/yazi/yazi.toml
+
+[mgr]
+show_hidden = false
+
+# ENHANCEMENT: Standard power-user multi-pane ratio [Parent, Current, Preview]
+ratio = [1, 3, 4]
+
+# ENHANCEMENT: Display details alongside names, sorted naturally
+linemode = "size_and_mtime"
+sort_by = "natural"
+sort_sensitive = false
+sort_reverse = false
+sort_dir_first = true
+
+[status]
+# ENHANCEMENT: Clean status bar showing percentage and position track indicators
+separator_open  = ""
+separator_close = ""
+
+[plugin]
+prepend_preloaders = [
+  { mime = "{audio,video,image}/*", run = "mediainfo" },
+  { mime = "application/subrip", run = "mediainfo" },
+  { mime = "application/postscript", run = "mediainfo" },
+]
+
+prepend_previewers = [
+  { mime = "{audio,video,image}/*", run = "mediainfo" },
+  { mime = "application/subrip", run = "mediainfo" },
+  { mime = "application/postscript", run = "mediainfo" },
+]
+
+[tasks]
+image_alloc = 1073741824        
+
+[spot]
+title = { fg = "green" }
+tbl_col = { fg = "blue" }
+
+[opener]
+# Text Editing (Neovim)
+edit = [
+  { run = 'nvim "$@"', block = true, desc = "Open in Neovim" },
+]
+
+# Media Playback (MPV)
+play = [
+  { run = 'mpv "$@"', orphan = true, for = "unix", desc = "Play Media via MPV" },
+]
+
+# Office Documents (OnlyOffice / Fallback LibreOffice)
+docs = [
+  { run = 'xdg-open "$@"', orphan = true, desc = "System Default Document Viewer" }
+]
+
+# Audio Players
+audio = [
+  { run = 'mpv --no-video "$@"', orphan = true, desc = "Play Audio via MPV" }
+]
+
+# Image Viewers
+image = [
+  { run = 'loupe "$@"', desc = "Loupe Image Viewer", orphan = true },
+  { run = 'xdg-open "$@"', desc = "System Default Image Viewer", orphan = true }
+]
+
+# Archive Extraction & Management (New Opener)
+extract = [
+  { run = 'als "$@"', block = true, desc = "Extract Archive Here" },
+  { run = 'unar "$@"', block = true, desc = "Unpack Archive with unar" }
+]
+
+# PDF & E-Book Readers (New Opener)
+pdf = [
+  { run = 'zathura "$@"', orphan = true, desc = "Zathura PDF Reader" },
+  { run = 'xdg-open "$@"', orphan = true, desc = "System Default Reader" }
+]
+
+[open]
+rules = [
+  # Code & Text files
+  { mime = "text/*", use = "edit" },
+  
+  # Media
+  { mime = "video/*", use = "play" },
+  { mime = "audio/*", use = "audio" },
+  { mime = "image/*", use = "image" },
+  
+  # Archives (Zip, Tar, Rar, 7z)
+  { mime = "application/zip", use = "extract" },
+  { mime = "application/x-tar", use = "extract" },
+  { mime = "application/x-bzip*", use = "extract" },
+  { mime = "application/x-compressed-tar", use = "extract" },
+  { mime = "application/x-xz", use = "extract" },
+  { mime = "application/x-rar", use = "extract" },
+  { mime = "application/vnd.rar", use = "extract" },
+  { mime = "application/x-7z-compressed", use = "extract" },
+
+  # Documents & PDFs
+  { mime = "application/pdf", use = "pdf" },
+  { mime = "application/vnd.openxmlformats-officedocument.*", use = "docs" },
+  { mime = "application/vnd.oasis.opendocument.*", use = "docs" },
+  { mime = "application/msword", use = "docs" },
+
+  # Explicit Extension Fallbacks
+  { url = "*.json", use = "edit" },
+  { url = "*.html", use = [ "play", "edit" ] },
+  { url = "*.toml", use = "edit" },
+  { url = "*.yaml", use = "edit" },
+  { url = "*.yml", use = "edit" },
+  { url = "*.md", use = "edit" },
+  { url = "*.pdf", use = "pdf" },
+  { url = "*.docx", use = "docs" },
+  { url = "*.doc", use = "docs" },
+  { url = "*.xlsx", use = "docs" },
+  { url = "*.pptx", use = "docs" },
+  { url = "*.zip", use = "extract" },
+  { url = "*.tar.*", use = "extract" },
+  { url = "*.rar", use = "extract" },
+  { url = "*.7z", use = "extract" },
+]

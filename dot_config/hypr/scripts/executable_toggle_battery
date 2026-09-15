@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# Define the hardware target path
+BAT_PATH="/sys/class/power_supply/BAT1/charge_types"
+
+# Stop execution if the path does not exist on this machine
+if [ ! -f "$BAT_PATH" ]; then
+  notify-send "Battery Error" -m "Hardware control file not found at BAT1." -i battery-missing
+  exit 1
+fi
+
+# Read the active driver profile
+CURRENT_PROFILE=$(cat "$BAT_PATH")
+
+if [[ "$CURRENT_PROFILE" == *"Standard [Long_Life]"* ]]; then
+  # Change from conservation mode to full charge
+  if echo "Standard" | pkexec /usr/bin/tee "$BAT_PATH" >/dev/null; then
+    notify-send "Battery Management" "<b><span color='#ff5555'>⚡ Travel Mode Active</span></b>\n\nBattery will full charge to 100%." -i battery-full-charging
+  fi
+else
+  # Change from full charge to conservation mode
+  if echo "Long_Life" | pkexec /usr/bin/tee "$BAT_PATH" >/dev/null; then
+    notify-send "Battery Management" "<b><span color='#50fa7b'>🛡️ Conservation Mode Active</span></b>\n\nBattery will stop charging at 80%." -i battery-good
+  fi
+fi
