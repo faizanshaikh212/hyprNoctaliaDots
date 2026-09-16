@@ -10,7 +10,8 @@ local games = {
 	"steam_app",
 	"cs2",
 	"minecraft",
-	"no-mans-sky"
+	"no-mans-sky",
+	"cyberpunk"
 }
 
 

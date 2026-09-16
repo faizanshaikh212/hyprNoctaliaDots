@@ -12,6 +12,15 @@ hl.window_rule({
 	move = { "monitor_w*0.425", "monitor_h*0.455" },
 })
 
+-- Loupe
+hl.window_rule({
+	match = { class = "org.gnome.Loupe" },
+	center = true,
+	float = true,
+	size = { "monitor_w*0.8", "monitor_h*0.8" },	
+})
+
+
 -- Discord Configurations
 
 -- Open Discord in Workspace-6, Silent Mode
