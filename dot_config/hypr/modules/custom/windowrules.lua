@@ -3,15 +3,6 @@ local noctalia = require("noctalia")
 ---- CUSTOM WINDOWRULES ----
 ----------------------------
 
--- Floating Numbat Scientific Calculator
-hl.window_rule({
-	name = "numbat_scratchpad",
-	match = { class = "numbat-calc" },
-	float = true,
-	size = { "monitor_w*0.15", "monitor_h*0.5" },
-	move = { "monitor_w*0.425", "monitor_h*0.455" },
-})
-
 -- Loupe
 hl.window_rule({
 	match = { class = "org.gnome.Loupe" },
